@@ -10,13 +10,7 @@ from app.schemas.batch import (
 from app.routes.auth import get_db
 from app.core.roles import require_role
 from app.models.user import UserRole
-from app.crud.batch import (
-    list_batches,
-    get_batch, 
-    create_batch,
-    update_batch,
-    delete_batch,
-)
+import app.crud.batch as batch_crud
 
 router = APIRouter()
 
@@ -33,7 +27,7 @@ def list_my_batches(
     user=Depends(require_role(UserRole.manufacturer)),
 ):
     
-    total, items = list_batches(
+    total, items = batch_crud.list_batches(
         db=db,
         manufacturer_id=user.id,
         page=page,
@@ -59,7 +53,7 @@ def get_batch(
     db: Session = Depends(get_db),
     user=Depends(require_role(UserRole.manufacturer)),
 ):
-    batch = get_batch(db, batch_id, user.id)
+    batch = batch_crud.get_batch(db, batch_id, user.id)
 
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
@@ -78,7 +72,7 @@ def create_batch(
     user=Depends(require_role(UserRole.manufacturer)),
 ):
     try:
-        batch, _ = create_batch(
+        batch, _ = batch_crud.create_batch(
             db=db,
             product_id=product_id,
             manufacturer_id=user.id,
@@ -100,7 +94,7 @@ def update_batch(
     user=Depends(require_role(UserRole.manufacturer)),
 ):
     try:
-        return update_batch(
+        return batch_crud.update_batch(
             db=db,
             batch_id=batch_id,
             manufacturer_id=user.id,
@@ -120,7 +114,7 @@ def delete_batch(
     user=Depends(require_role(UserRole.manufacturer)),
 ):
     try:
-        delete_batch(
+        batch_crud.delete_batch(
             db=db,
             batch_id=batch_id,
             manufacturer_id=user.id,

@@ -22,7 +22,10 @@ def pending_lab_tests(
     query = (
         db.query(Batch)
         .options(joinedload(Batch.product))
-        .filter(Batch.validation_status == ValidationStatus.lab_required)
+        .filter(
+            Batch.validation_status == ValidationStatus.lab_required,
+            ~Batch.lab_reports.any()  # ✅ No lab report exists
+        )
     )
 
     if search:
