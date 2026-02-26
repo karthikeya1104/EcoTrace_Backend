@@ -4,7 +4,7 @@ from app.models.user import UserRole
 
 def require_role(required: UserRole):
     def checker(user = Depends(get_current_user)):
-        if user.role != required:
+        if user.role != required and user.role != UserRole.admin:
             raise HTTPException(status_code=403, detail="Forbidden")
         return user
     return checker

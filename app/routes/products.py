@@ -54,6 +54,17 @@ def get_my_products_stats(
     return get_manufacturer_dashboard(db, user.id)
 
 
+@router.get("/{product_id}", response_model=ProductWithBatches)
+def get_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(require_role(UserRole.manufacturer))
+):
+    product = get_product_by_id(db, product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
 # -------------------------
 # Admin Route 
 # -------------------------
@@ -67,16 +78,6 @@ def list_all_products(
 ):
     return get_all_products(db, skip, limit)
 
-@router.get("/{product_id}", response_model=ProductWithBatches)
-def get_product(
-    product_id: int,
-    db: Session = Depends(get_db),
-    user=Depends(require_role(UserRole.admin))
-):
-    product = get_product_by_id(db, product_id)
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return product
 
 
 @router.put("/{product_id}", response_model=ProductResponse)
