@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, computed_field, ConfigDict
 from datetime import datetime
 from app.models.batch import BatchStatus
-
+from app.core.config import APP_BASE_URL
 
 # =========================
 # CREATE / UPDATE
@@ -54,7 +54,7 @@ class BatchResponse(BaseModel):
     @computed_field
     @property
     def qr_url(self) -> str:
-        return f"http://localhost:5173/public/batch/{self.id}"
+        return f"{APP_BASE_URL}/public/batch/{self.id}"
 
 
 class BatchListResponse(BaseModel):

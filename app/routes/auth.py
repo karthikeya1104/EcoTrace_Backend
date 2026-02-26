@@ -25,9 +25,17 @@ def get_db():
 
 
 # ---------- Register ----------
-@router.post("/register", response_model=UserOut)
+@router.post("/register", response_model=Token)
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    return create_user(db, user, role = user.role)
+    db_user = create_user(db, user, role = user.role)
+
+    return {
+        "access_token": create_access_token(db_user.id, db_user.role.value),
+        "refresh_token": create_refresh_token(db_user.id),
+        "role": db_user.role.value,
+        "token_type": "bearer",
+        "username": db_user.name,
+    }
 
 
 # ---------- Login (JSON) ----------

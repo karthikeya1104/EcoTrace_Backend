@@ -2,23 +2,33 @@ from sqlalchemy.orm import Session
 from app.models.user import User, UserRole
 from app.core.security import hash_password
 from fastapi import HTTPException
+from app.utils.logger import get_logger
+
+logger = get_logger("crud.user")
+
 
 def create_user(db: Session, user, role: UserRole = UserRole.consumer):
     # Check if email already exists
     existing_user = db.query(User).filter(User.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     db_user = User(
         name=user.name,
         email=user.email,
         password=hash_password(user.password),
         role=role
     )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+
+    try:
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    except Exception as e:
+        logger.exception("Failed to create user %s", user.email)
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create user")
 
 def get_user(db: Session, user_id: int):
     return db.query(User).filter(User.id == user_id).first()
