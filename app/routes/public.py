@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.database import SessionLocal
 from app.models.batch import Batch
 from app.models.product import Product
 from app.models.lab_report import LabReport
 from app.models.transport import Transport
 from app.models.ai_score import AIScore
+from app.models.material import Material, BatchMaterial
 
 router = APIRouter()
 
@@ -18,54 +19,90 @@ def get_db():
 
 @router.get("/batch/{batch_id}")
 def view_batch(batch_id: int, db: Session = Depends(get_db)):
-    batch = db.query(Batch).filter(Batch.id == batch_id).first()
-    if not batch:
-        raise HTTPException(404, "Batch not found")
 
-    product = db.query(Product).filter(Product.id == batch.product_id).first()
-    lab = db.query(LabReport).filter(LabReport.batch_id == batch.id).all()
-    transport = db.query(Transport).filter(Transport.batch_id == batch.id).all()
-    score = db.query(AIScore).filter(AIScore.batch_id == batch.id).first()
+    batch = (
+        db.query(Batch)
+        .options(
+            selectinload(Batch.product),
+            selectinload(Batch.materials).selectinload(BatchMaterial.material),
+            selectinload(Batch.lab_reports),
+            selectinload(Batch.ai_scores),
+            selectinload(Batch.transports),
+        )
+        .filter(Batch.id == batch_id)
+        .first()
+    )
+
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch not found")
+
+    ai_score = batch.ai_scores[0] if batch.ai_scores else None
 
     return {
         "product": {
-            "name": product.name,
-            "brand": product.brand,
-            "category": product.category,
-            "description": product.description
+            "id": batch.product.id,
+            "name": batch.product.name,
+            "brand": batch.product.brand,
+            "category": batch.product.category,
+            "description": batch.product.description,
         },
         "batch": {
+            "id": batch.id,
             "code": batch.batch_code,
-            "material_info": batch.material_info,
-            "manufactured": batch.manufacture_date,
-            "expiry": batch.expiry_date,
-            "location": batch.manufacturing_location,
-            "base_carbon": batch.base_carbon_footprint,
-            "status": batch.status
+            "manufacture_date": batch.manufacture_date,
+            "expiry_date": batch.expiry_date,
+            "manufacturing_location": batch.manufacturing_location,
+            "base_carbon_footprint": batch.base_carbon_footprint,
+            "status": batch.status.value if batch.status else None,
+            "validation_status": batch.validation_status.value if batch.validation_status else None,
+            "created_at": batch.created_at,
         },
-        "lab_reports": [
+        "materials": [
             {
-                "summary": l.test_summary,
-                "certifications": l.certifications,
-                "eco_rating": l.eco_rating,
-                "verified": l.verified,
-                "date": l.created_at
-            } for l in lab
+                "material_id": bm.material.id,
+                "name": bm.material.name,
+                "common_name": bm.material.common_name,
+                "risk_level": bm.material.risk_level,
+                "description": bm.material.description,
+                "percentage": bm.percentage,
+                "source_info_provided": bm.source_info_provided,
+                "source": bm.source,
+            }
+            for bm in batch.materials
         ],
-        "transport": [
+        "transports": [
             {
+                "id": t.id,
                 "origin": t.origin,
                 "destination": t.destination,
                 "distance_km": t.distance_km,
-                "fuel": t.fuel_type,
-                "emission": t.transport_emission
-            } for t in transport
+                "fuel_type": t.fuel_type,
+                "vehicle_type": t.vehicle_type,
+                "transport_emission": t.transport_emission,
+                "notes": t.notes,
+                "created_at": t.created_at,
+            }
+            for t in batch.transports
         ],
-        "ai_score": score and {
-            "environment": score.environment_score,
-            "ethics": score.ethics_score,
-            "safety": score.safety_score,
-            "cost": score.cost_score,
-            "final": score.final_score
-        }
+        "lab_reports": [
+            {
+                "id": l.id,
+                "analysis": l.analysis_data,
+                "certifications": l.certifications,
+                "safety_status": (
+                    l.safety_status.value
+                    if hasattr(l.safety_status, "value")
+                    else l.safety_status
+                ),
+                "lab_score": l.lab_score,
+                "verified": l.verified,
+                "created_at": l.created_at,
+            }
+            for l in batch.lab_reports
+        ],
+        "ai_score": {
+            "rating": ai_score.rating,
+            "reasoning": ai_score.reasoning,
+            "generated_at": ai_score.generated_at,
+        } if ai_score else None,
     }

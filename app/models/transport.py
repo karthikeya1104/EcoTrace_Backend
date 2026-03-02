@@ -23,4 +23,4 @@ class Transport(Base):
     notes = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    batch = relationship("Batch")
+    batch = relationship("Batch", back_populates="transports")

@@ -1,12 +1,16 @@
-from sqlalchemy.orm import Session, joinedload
+import traceback
+
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 from app.models.batch import Batch, ValidationStatus
 from app.models.product import Product
 from app.models.ai_score import AIScore
 from app.services.change_analyzer import classify_change
-from app.services.ai_engine import generate_ai_score
+from app.services.ai_engine import generate_ai_rating
 from app.core.config import APP_BASE_URL
-
+from app.crud.material import add_materials
+from app.models.material import BatchMaterial
 
 # ============================================================
 # BASE QUERY (Reusable)
@@ -64,7 +68,12 @@ def list_batches(
 # ============================================================
 def get_batch(db: Session, batch_id: int, manufacturer_id: int):
     return (
-        _base_query(db)
+        db.query(Batch)
+        .options(
+            selectinload(Batch.product),
+            selectinload(Batch.materials)
+                .selectinload(BatchMaterial.material)  # 🔥 REQUIRED
+        )
         .join(Batch.product)
         .filter(
             Batch.id == batch_id,
@@ -83,79 +92,98 @@ def create_batch(
     manufacturer_id: int,
     data,
 ):
-    product = (
-        db.query(Product)
-        .filter(
-            Product.id == product_id,
-            Product.manufacturer_id == manufacturer_id,
-        )
-        .first()
-    )
+    try:
+        with db.begin():  # 🔒 ACID transaction block
 
-    if not product:
-        raise ValueError("Product not found or not owned")
+            # -------- 1. Validate Product Ownership --------
+            product = (
+                db.query(Product)
+                .filter(
+                    Product.id == product_id,
+                    Product.manufacturer_id == manufacturer_id,
+                )
+                .with_for_update()  # optional isolation lock
+                .first()
+            )
 
-    # prevent duplicate batch code per product
-    exists = (
-        db.query(Batch.id)
-        .filter(
-            Batch.product_id == product_id,
-            Batch.batch_code == data.batch_code,
-        )
-        .first()
-    )
+            if not product:
+                raise ValueError("Product not found or not owned")
 
-    if exists:
+            # -------- 2. Extract Materials Safely --------
+            materials_data = data.material or []
+
+            # Create batch without material field
+            batch_payload = data.model_dump(exclude={"material"})
+            batch = Batch(**batch_payload, product_id=product_id)
+            db.add(batch)
+
+            db.flush()  # ✅ ensures batch.id is generated
+
+            # -------- 3. Add Materials --------
+            add_materials(
+                db=db,
+                materials=materials_data,
+                batch_id=batch.id,
+            )
+
+            # -------- 4. Intelligent Validation --------
+            previous = (
+                db.query(Batch)
+                .filter(Batch.product_id == product_id)
+                .order_by(Batch.created_at.desc())
+                .offset(1)
+                .first()
+            )
+
+            ai_rating = None
+
+            if previous:
+                change_type = classify_change(
+                    previous.material_info,
+                    materials_data,
+                )
+
+                if change_type == "no_change":
+                    batch.validation_status = ValidationStatus.auto_verified
+
+                    ai_rating = (
+                        db.query(AIScore.final_score)
+                        .filter(AIScore.batch_id == previous.id)
+                        .scalar()
+                    )
+
+                elif change_type == "minor":
+                    batch.validation_status = ValidationStatus.ai_review
+                    ai_rating = generate_ai_rating()
+
+                else:
+                    batch.validation_status = ValidationStatus.lab_required
+                    ai_rating = generate_ai_rating()
+
+            else:
+                batch.validation_status = ValidationStatus.lab_required
+                ai_rating = generate_ai_rating()
+
+            # -------- 5. Store AI Score --------
+            if ai_rating is not None:
+                db.add(
+                    AIScore(
+                        batch_id=batch.id,
+                        rating=ai_rating["rating"],
+                        reasoning=ai_rating["reasoning"],
+                    )
+                )
+
+        # 🔒 Commit happens automatically here
+
+    except IntegrityError:
+        db.rollback()
         raise ValueError("Batch code already exists for this product")
 
-    batch = Batch(**data.model_dump(), product_id=product_id)
-    db.add(batch)
-    db.flush()  # flush only, no commit yet
-
-    # ---------- INTELLIGENT VALIDATION PIPELINE ----------
-
-    previous = (
-        db.query(Batch)
-        .filter(Batch.product_id == product_id)
-        .order_by(Batch.created_at.desc())
-        .offset(1)
-        .first()
-    )
-
-    ai_score_value = None
-
-    if previous:
-        change_type = classify_change(
-            previous.material_info,
-            data.material_info,
-        )
-
-        if change_type == "no_change":
-            batch.validation_status = ValidationStatus.auto_verified
-
-            prev_score = (
-                db.query(AIScore.final_score)
-                .filter(AIScore.batch_id == previous.id)
-                .scalar()
-            )
-            ai_score_value = prev_score
-
-        elif change_type == "minor":
-            batch.validation_status = ValidationStatus.ai_review
-            ai_score_value = generate_ai_score()["final_score"]
-
-        else:
-            batch.validation_status = ValidationStatus.lab_required
-            ai_score_value = generate_ai_score()["final_score"]
-
-    else:
-        batch.validation_status = ValidationStatus.lab_required
-        ai_score_value = generate_ai_score()["final_score"]
-
-    if ai_score_value is not None:
-        db.add(AIScore(batch_id=batch.id, final_score=ai_score_value))
-
-    db.commit()
+    except Exception:
+        db.rollback()
+        print("Error creating batch:", traceback.format_exc())
+        raise ValueError("Failed to create batch")
 
     return (
         _base_query(db)

@@ -1,17 +1,13 @@
 import random
 from datetime import datetime
 
-def generate_ai_score():
+def generate_ai_rating():
     """
-    Generate AI sustainability score (placeholder with random data).
+    Generate AI sustainability rating (placeholder with random data).
     Will be replaced with actual AI implementation later.
     """
     return {
-        "environment_score": round(random.uniform(60, 95), 2),
-        "ethics_score": round(random.uniform(65, 90), 2),
-        "safety_score": round(random.uniform(70, 95), 2),
-        "cost_score": round(random.uniform(55, 85), 2),
-        "final_score": round(random.uniform(65, 90), 2),
+        "rating": round(random.uniform(65, 90), 2),
         "reasoning": "Preliminary AI sustainability estimate. AI engine will provide detailed analysis soon."
     }
 

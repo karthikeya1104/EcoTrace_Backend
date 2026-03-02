@@ -1,7 +1,14 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Float, Enum, JSON
 from sqlalchemy.orm import relationship
 from app.database import Base
 from datetime import datetime
+import enum
+
+class SafetyStatus(enum.Enum):
+    safe = "safe"
+    caution = "caution"
+    unsafe = "unsafe"
+
 
 class LabReport(Base):
     __tablename__ = "lab_reports"
@@ -11,11 +18,14 @@ class LabReport(Base):
     batch_id = Column(Integer, ForeignKey("batches.id"))
     lab_id = Column(Integer, ForeignKey("users.id"))
 
-    test_summary = Column(String)
+    analysis_data = Column(JSON)
     certifications = Column(String)
 
-    eco_rating = Column(Integer)
-    lab_score = Column(Float, nullable=False)
+    safety_status = Column(Enum(SafetyStatus))
+
+    notes = Column(String)
+
+    lab_score = Column(Float, nullable=False) # Rating from 1 to 5
 
     verified = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)

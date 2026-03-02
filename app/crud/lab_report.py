@@ -27,13 +27,14 @@ def create_lab_report(db: Session, data, batch_id: int, lab_id: int):
     )
     if existing:
         raise HTTPException(400, "Report already exists for this batch")
-
+    print(data.safety_status, data.lab_score)
     report = LabReport(
         batch_id=batch_id,
         lab_id=lab_id,
-        test_summary=data.test_summary,
+        analysis_data=[section.model_dump() for section in data.analysis_data],
         certifications=data.certifications,
-        eco_rating=data.eco_rating,
+        safety_status=data.safety_status,
+        notes=data.notes,
         lab_score=data.lab_score,
         verified=False
     )

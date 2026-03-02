@@ -5,7 +5,7 @@ from app.core.roles import require_role
 from app.models.user import UserRole
 from app.models.ai_score import AIScore
 from app.models.batch import Batch
-from app.services.ai_engine import generate_ai_score, analyze_batch_materials
+from app.services.ai_engine import generate_ai_rating, analyze_batch_materials
 
 router = APIRouter()
 
@@ -77,7 +77,7 @@ def regenerate_ai_score(
     if not batch:
         raise HTTPException(status_code=404, detail="Batch not found")
     
-    score_data = generate_ai_score()
+    score_data = generate_ai_rating()
     
     # Update or create AI score
     ai_score = db.query(AIScore).filter(AIScore.batch_id == batch_id).first()
