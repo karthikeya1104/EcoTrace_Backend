@@ -10,10 +10,9 @@ from app.core.config import APP_BASE_URL
 # =========================
 
 class BatchMaterialInput(BaseModel):
-    material_id: int
+    name: str = Field(..., min_length=1, max_length=100)
     percentage: float
-    source_country: Optional[str] = None
-    source_info_provided: bool = False
+    source: Optional[str] = None
 
 
 class BatchCreate(BaseModel):

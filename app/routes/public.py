@@ -94,6 +94,7 @@ def view_batch(batch_id: int, db: Session = Depends(get_db)):
                     if hasattr(l.safety_status, "value")
                     else l.safety_status
                 ),
+                "notes": l.notes,
                 "lab_score": l.lab_score,
                 "verified": l.verified,
                 "created_at": l.created_at,

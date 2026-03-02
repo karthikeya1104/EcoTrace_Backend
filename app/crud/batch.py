@@ -110,10 +110,9 @@ def create_batch(
                 raise ValueError("Product not found or not owned")
 
             # -------- 2. Extract Materials Safely --------
-            materials_data = data.material or []
-
+            materials_data = data.materials or []
             # Create batch without material field
-            batch_payload = data.model_dump(exclude={"material"})
+            batch_payload = data.model_dump(exclude={"materials"}, exclude_none=True)
             batch = Batch(**batch_payload, product_id=product_id)
             db.add(batch)
 
@@ -138,10 +137,7 @@ def create_batch(
             ai_rating = None
 
             if previous:
-                change_type = classify_change(
-                    previous.material_info,
-                    materials_data,
-                )
+                change_type = "Major" # classify_change(previous.material_info, materials_data,)
 
                 if change_type == "no_change":
                     batch.validation_status = ValidationStatus.auto_verified
