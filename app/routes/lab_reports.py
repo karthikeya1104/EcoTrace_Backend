@@ -21,7 +21,7 @@ from app.crud.lab_report import (
     delete_lab_report,
     get_lab_report_by_id,
     get_reports_by_lab_paginated,
-    get_all_reports_paginated
+    get_all_reports_paginated,
 )
 
 router = APIRouter()

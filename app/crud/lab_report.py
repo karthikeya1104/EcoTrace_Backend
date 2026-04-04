@@ -1,10 +1,9 @@
-from http.client import HTTPException
-
+from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, cast, String
 from app.models.lab_report import LabReport
 from app.models.batch import Batch
-
+from app.models.batch import ValidationStatus, BatchStatus
 
 # ==========================================================
 # CREATE
@@ -15,6 +14,13 @@ def create_lab_report(db: Session, data, batch_id: int, lab_id: int):
     batch = db.query(Batch).filter(Batch.id == batch_id).first()
     if not batch:
         raise ValueError("Batch not found")
+    
+
+    if batch.validation_status != ValidationStatus.lab_required:
+        raise HTTPException(
+            status_code=400,
+            detail="Lab report not required for this batch"
+        )
 
     # Optional: prevent duplicate report for same batch by same lab
     existing = (
@@ -26,8 +32,11 @@ def create_lab_report(db: Session, data, batch_id: int, lab_id: int):
         .first()
     )
     if existing:
-        raise HTTPException(400, "Report already exists for this batch")
-    print(data.safety_status, data.lab_score)
+        raise HTTPException(
+            status_code=400,
+            detail="Report already exists for this batch"
+        )
+    
     report = LabReport(
         batch_id=batch_id,
         lab_id=lab_id,
@@ -95,6 +104,21 @@ def delete_lab_report(db: Session, report_id: int):
 # PAGINATED HELPERS
 # ==========================================================
 
+def get_all_reports_paginated(db: Session, skip: int, limit: int):
+    query = db.query(LabReport)
+
+    total = query.count()
+
+    items = (
+        query.order_by(LabReport.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    return items, total
+
+
 def get_reports_by_lab_paginated(
     db: Session,
     lab_id: int,
@@ -117,7 +141,6 @@ def get_reports_by_lab_paginated(
         search_term = f"%{search}%"
         query = query.filter(
             or_(
-                LabReport.test_summary.ilike(search_term),
                 LabReport.certifications.ilike(search_term),
                 cast(LabReport.id, String).ilike(search_term),
                 Batch.batch_code.ilike(search_term),
@@ -136,8 +159,19 @@ def get_reports_by_lab_paginated(
     return items, total
 
 
-def get_all_reports_paginated(db: Session, skip: int, limit: int):
-    query = db.query(LabReport)
+def get_all_reports_admin(
+    db: Session,
+    skip: int,
+    limit: int,
+    verified: bool | None = None
+):
+    query = (
+        db.query(LabReport)
+        .options(joinedload(LabReport.batch))
+    )
+
+    if verified is not None:
+        query = query.filter(LabReport.verified == verified)
 
     total = query.count()
 
@@ -149,3 +183,44 @@ def get_all_reports_paginated(db: Session, skip: int, limit: int):
     )
 
     return items, total
+
+
+def verify_lab_report(db: Session, report_id: int):
+    report = get_lab_report_by_id(db, report_id)
+
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    if report.verified:
+        raise HTTPException(status_code=400, detail="Already verified")
+
+    report.verified = True
+
+    # ✅ Update batch status
+    report.batch.status = BatchStatus.verified
+    report.batch.validation_status = ValidationStatus.auto_verified
+
+    db.commit()
+    db.refresh(report)
+
+    return report
+
+
+def reject_lab_report(db: Session, report_id: int, reason: str | None = None):
+    report = get_lab_report_by_id(db, report_id)
+
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    if report.verified:
+        raise HTTPException(status_code=400, detail="Cannot reject verified report")
+
+    report.batch.status = BatchStatus.rejected
+
+    if reason:
+        report.notes = (report.notes or "") + f"\n[ADMIN REJECTED]: {reason}"
+
+    db.commit()
+    db.refresh(report)
+
+    return report

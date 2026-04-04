@@ -1,15 +1,90 @@
+import os
+import json
+import google.generativeai as genai
 import random
-from datetime import datetime
 
-def generate_ai_rating():
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+model = genai.GenerativeModel("gemini-2.5-flash")
+
+
+def generate_ai_rating(product, batch, materials):
     """
-    Generate AI sustainability rating (placeholder with random data).
-    Will be replaced with actual AI implementation later.
+    Generate sustainability rating using Gemini
+    based on product details + batch + materials.
     """
-    return {
-        "rating": round(random.uniform(65, 90), 2),
-        "reasoning": "Preliminary AI sustainability estimate. AI engine will provide detailed analysis soon."
+
+    payload_data = {
+        "product": product,
+        "batch": {
+            "batch_code": getattr(batch, "batch_code", None),
+            "created_at": batch.created_at.isoformat() if getattr(batch, "created_at", None) else None
+        },
+        "materials": materials
     }
+
+    prompt = f"""
+        You are a textile sustainability expert.
+
+        Evaluate the sustainability of this product batch.
+
+        Consider:
+        - material sustainability
+        - water usage
+        - carbon footprint
+        - synthetic vs natural fibers
+        - recyclability
+        - microplastic impact
+
+        Gice rating (score) Out of 100
+
+        Input data:
+        {json.dumps(payload_data, indent=2)}
+
+        Return STRICT JSON ONLY in this format:
+
+        {{
+        "rating": number(0 -100),
+        "reasoning": "short explanation"
+        }}
+    """
+
+    try:
+        response = model.generate_content(
+            prompt,
+            generation_config={
+                "temperature": 0.2,
+                "response_mime_type": "application/json"
+            }
+        )
+
+        text = response.text.strip()
+
+        # Remove markdown code blocks if Gemini adds them
+        if text.startswith("```"):
+            text = text.replace("```json", "").replace("```", "").strip()
+
+        data = json.loads(text)
+
+        print(data.get("rating"), data.get("reasoning"))
+
+        return {
+            "rating": float(data.get("rating")),
+            "reasoning": data.get("reasoning", "")
+        }
+
+    except json.JSONDecodeError:
+        return {
+            "rating": None,
+            "reasoning": "Failed to parse AI response"
+        }
+
+    except Exception as e:
+        return {
+            "rating": None,
+            "reasoning": f"AI analysis failed: {str(e)}"
+        }
+
 
 def analyze_batch_materials(material_info: str):
     """
@@ -25,4 +100,3 @@ def analyze_batch_materials(material_info: str):
             "Explore eco-friendly alternatives"
         ]
     }
-

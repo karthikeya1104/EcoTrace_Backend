@@ -9,10 +9,6 @@ from app.core.security import get_current_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.get("/me", response_model=UserOut)
-def get_current_user_info(current_user = Depends(get_current_user)):
-    return current_user
-
 @router.put("/me", response_model=UserOut)
 def update_current_user(
     user_update: UserUpdate,

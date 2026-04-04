@@ -71,7 +71,7 @@ def create_transport(db: Session, data, transporter_id: int):
             f"Transport already exists from '{data.origin}' to '{data.destination}' for this batch"
         )
 
-    emission = calculate_transport_emission(data.distance_km, data.fuel_type)
+    emission = calculate_transport_emission(data.distance_km, data.fuel_type, data.vehicle_type, data.notes)
 
     transport = Transport(
         **data.model_dump(),

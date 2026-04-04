@@ -11,6 +11,16 @@ from app.services.ai_engine import generate_ai_rating
 from app.core.config import APP_BASE_URL
 from app.crud.material import add_materials
 from app.models.material import BatchMaterial
+from app.models.lab_report import LabReport
+
+def extract_product_details(product):
+    return {
+        "name": product.name,
+        "brand": product.brand,
+        "category": product.category,
+        "description": product.description,
+    }
+
 
 # ============================================================
 # BASE QUERY (Reusable)
@@ -102,21 +112,24 @@ def create_batch(
                     Product.id == product_id,
                     Product.manufacturer_id == manufacturer_id,
                 )
-                .with_for_update()  # optional isolation lock
+                .with_for_update()
                 .first()
             )
 
             if not product:
                 raise ValueError("Product not found or not owned")
 
-            # -------- 2. Extract Materials Safely --------
+            # -------- 2. Extract Materials --------
             materials_data = data.materials or []
-            # Create batch without material field
-            batch_payload = data.model_dump(exclude={"materials"}, exclude_none=True)
+
+            batch_payload = data.model_dump(
+                exclude={"materials"},
+                exclude_none=True
+            )
+
             batch = Batch(**batch_payload, product_id=product_id)
             db.add(batch)
-
-            db.flush()  # ✅ ensures batch.id is generated
+            db.flush()  # ✅ generate batch.id
 
             # -------- 3. Add Materials --------
             add_materials(
@@ -125,7 +138,7 @@ def create_batch(
                 batch_id=batch.id,
             )
 
-            # -------- 4. Intelligent Validation --------
+            # -------- 4. Fetch Previous Batch --------
             previous = (
                 db.query(Batch)
                 .filter(Batch.product_id == product_id)
@@ -134,43 +147,114 @@ def create_batch(
                 .first()
             )
 
-            ai_rating = None
-
+            # -------- 5. Prepare Material Comparison --------
+            previous_materials = []
             if previous:
-                change_type = "Major" # classify_change(previous.material_info, materials_data,)
+                previous_materials = [
+                    {
+                        "name": bm.material.name,
+                        "percentage": bm.percentage,
+                    }
+                    for bm in previous.materials
+                ]
 
+            current_materials = [
+                m.model_dump()
+                for m in materials_data
+            ]
+
+            ai_rating = None
+            product_details = extract_product_details(product)
+
+            # -------- 6. Validation Logic --------
+            if previous:
+                change_type = classify_change(
+                    previous_materials,
+                    current_materials
+                )
+
+                # ✅ NO CHANGE → reuse everything
                 if change_type == "no_change":
                     batch.validation_status = ValidationStatus.auto_verified
 
+                    # ---- Reuse AI score ----
                     ai_rating = (
-                        db.query(AIScore.final_score)
+                        db.query(AIScore)
                         .filter(AIScore.batch_id == previous.id)
-                        .scalar()
+                        .order_by(AIScore.id.desc())
+                        .first()
                     )
 
+                    # ---- Reuse Lab Report ----
+                    previous_lab = (
+                        db.query(LabReport)
+                        .filter(LabReport.batch_id == previous.id)
+                        .order_by(LabReport.created_at.desc())
+                        .first()
+                    )
+
+                    if previous_lab:
+                        db.add(
+                            LabReport(
+                                batch_id=batch.id,
+                                lab_id=previous_lab.lab_id,
+                                analysis_data=previous_lab.analysis_data,
+                                certifications=previous_lab.certifications,
+                                safety_status=previous_lab.safety_status,
+                                notes="Reused from previous batch",
+                                lab_score=previous_lab.lab_score,
+                                verified=True,
+                            )
+                        )
+
+                # ✅ MINOR CHANGE → AI review
                 elif change_type == "minor":
                     batch.validation_status = ValidationStatus.ai_review
-                    ai_rating = generate_ai_rating()
+                    ai_rating = generate_ai_rating(
+                        product_details,
+                        batch,
+                        current_materials
+                    )
 
+                # ✅ MAJOR CHANGE → Lab required
                 else:
                     batch.validation_status = ValidationStatus.lab_required
-                    ai_rating = generate_ai_rating()
+                    ai_rating = generate_ai_rating(
+                        product_details,
+                        batch,
+                        current_materials
+                    )
 
+            # ✅ FIRST BATCH
             else:
                 batch.validation_status = ValidationStatus.lab_required
-                ai_rating = generate_ai_rating()
-
-            # -------- 5. Store AI Score --------
-            if ai_rating is not None:
-                db.add(
-                    AIScore(
-                        batch_id=batch.id,
-                        rating=ai_rating["rating"],
-                        reasoning=ai_rating["reasoning"],
-                    )
+                ai_rating = generate_ai_rating(
+                    product_details,
+                    batch,
+                    current_materials
                 )
 
-        # 🔒 Commit happens automatically here
+            # -------- 7. Store AI Score --------
+            if ai_rating:
+                if isinstance(ai_rating, dict):
+                    db.add(
+                        AIScore(
+                            batch_id=batch.id,
+                            rating=ai_rating["rating"],
+                            reasoning=ai_rating["reasoning"],
+                        )
+                    )
+                else:
+                    # reused AI score object
+                    db.add(
+                        AIScore(
+                            batch_id=batch.id,
+                            rating=ai_rating.rating,
+                            reasoning=ai_rating.reasoning,
+                        )
+                    )
+
+        # 🔒 auto commit
 
     except IntegrityError:
         db.rollback()

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
 from app.models import *
-from app.routes import auth, admin, users, products, batches, public, transport, ai, lab_reports, lab
+from app.routes import auth, admin, users, products, batches, public, transport, ai, lab_reports, lab,reviews
 from app.utils.logger import get_logger
 import dotenv
 import os
@@ -61,6 +61,8 @@ app.include_router(lab_reports.router, prefix="/api/lab-reports", tags=["LabRepo
 logger.info("Lab reports router loaded")
 app.include_router(public.router, prefix="/api", tags=["public"])
 logger.info("Public router loaded")
+app.include_router(reviews.router, prefix="/api/reviews", tags=["Reviews"])
+logger.info("Reviews router loaded")
 
 try:
     Base.metadata.create_all(bind=engine)

@@ -11,6 +11,7 @@ from app.core.security import (
     create_refresh_token,
     decode_token,
 )
+from app.core.security import get_current_user
 
 router = APIRouter(prefix="", tags=["auth"])
 
@@ -23,6 +24,10 @@ def get_db():
     finally:
         db.close()
 
+
+@router.get("/me", response_model=UserOut)
+def get_current_user_info(current_user = Depends(get_current_user)):
+    return current_user
 
 # ---------- Register ----------
 @router.post("/register", response_model=Token)
