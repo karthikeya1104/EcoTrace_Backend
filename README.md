@@ -6,16 +6,13 @@ EcoTrace is a comprehensive sustainability tracking platform that measures and o
 
 ### Key Capabilities
 
-- Manufacturers create products and batches with detailed material tracking
-- Transporters log shipments with real-time carbon emission calculations
-- Lab technicians conduct sustainability tests and generate reports
-- Administrators oversee operations and manage system data
-- AI engine analyzes batches and generates sustainability scores
-- Public access via QR codes for transparency and verification
-- **Lab Technicians** conduct sustainability tests and generate reports
-- **Administrators** oversee operations and manage system data
-- **AI Engine** analyzes batches and generates sustainability scores
-- **Public Access** via QR codes for transparency and verification
+- **🏭 Manufacturers** create products and batches with detailed material tracking
+- **🚚 Transporters** log shipments with real-time carbon emission calculations
+- **🧪 Lab Technicians** conduct sustainability tests and generate reports
+- **👥 Administrators** oversee operations and manage system data
+- **🤖 AI Engine** analyzes batches and generates sustainability scores
+- **📱 Public Access** via QR codes for transparency and verification
+- **🔒 Role-Based Security** with granular permissions and JWT authentication
 
 ---
 
@@ -23,21 +20,25 @@ EcoTrace is a comprehensive sustainability tracking platform that measures and o
 
 ### Technology Stack
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| Framework | FastAPI | High-performance async web API |
-| Database | SQLAlchemy + SQLite/PostgreSQL | ORM and data persistence |
-| Validation | Pydantic | Data validation and serialization |
-| Authentication | JWT | Secure token-based authentication |
-| Documentation | Swagger/OpenAPI | Interactive API documentation |
+| Component | Technology | Version | Purpose |
+|-----------|------------|---------|---------|
+| Framework | FastAPI | 0.128.0 | High-performance async web API |
+| Database | SQLAlchemy | 2.0.46 | ORM and data persistence |
+| Validation | Pydantic | 2.12.5 | Data validation and serialization |
+| Authentication | JWT | python-jose | Secure token-based authentication |
+| AI Integration | Google Generative AI | 0.8.6 | Sustainability scoring and analysis |
+| Password Hashing | bcrypt | 3.2.2 | Secure password storage |
+| CORS | FastAPI CORSMiddleware | - | Cross-origin resource sharing |
+| Logging | Python logging | - | Structured application logging |
 
 ### Design Principles
 
-- Modular service-oriented architecture with clear separation of concerns
-- Role-based access control with granular permissions
-- Comprehensive data validation and business logic enforcement
-- Async operations for scalability and performance
-- Type hints and documentation for maintainability
+- **Modular Architecture**: Clear separation of concerns with service-oriented design
+- **Role-Based Access Control**: Granular permissions for different user types
+- **Async Operations**: Scalable performance with asynchronous database operations
+- **Type Safety**: Full Python type hints and Pydantic validation
+- **Comprehensive Logging**: Detailed audit trails and error tracking
+- **API Documentation**: Auto-generated OpenAPI/Swagger documentation
 
 ---
 
@@ -46,70 +47,371 @@ EcoTrace is a comprehensive sustainability tracking platform that measures and o
 ```
 backend/
 ├── app/
-│   ├── main.py                 # FastAPI application entry point
-│   ├── config.py               # Database and app configuration
-│   ├── database.py             # Database connection and session management
+│   ├── main.py                 # FastAPI application entry point & route registration
+│   ├── config.py               # Database and application configuration
+│   ├── database.py             # Database connection, session management & Base
 │   ├── core/
 │   │   ├── config.py          # Core configuration settings
-│   │   ├── roles.py           # Role definitions and permissions
-│   │   └── security.py        # JWT utilities and security functions
+│   │   ├── roles.py           # Role definitions and permission matrices
+│   │   └── security.py        # JWT token creation, validation & security utilities
 │   ├── models/
 │   │   ├── __init__.py
 │   │   ├── user.py            # User authentication and profile models
 │   │   ├── product.py         # Product definitions and specifications
-│   │   ├── batch.py           # Production batch tracking
+│   │   ├── batch.py           # Production batch tracking with materials
 │   │   ├── transport.py       # Shipment and logistics models
-│   │   ├── lab_report.py      # Laboratory test results
-│   │   ├── review.py          # User feedback and ratings
+│   │   ├── lab_report.py      # Laboratory test results and findings
+│   │   ├── review.py          # User feedback and rating system
 │   │   ├── audit_log.py       # System activity audit trail
 │   │   └── ai_score.py        # AI-generated sustainability scores
 │   ├── schemas/
 │   │   ├── __init__.py
 │   │   ├── user.py            # User data validation schemas
-│   │   ├── product.py         # Product request/response schemas
-│   │   ├── batch.py           # Batch data structures
+│   │   ├── product.py         # Product request/response models
+│   │   ├── batch.py           # Batch data structures and validation
 │   │   ├── transport.py       # Transport operation schemas
-│   │   ├── lab_report.py      # Lab report validation
+│   │   ├── lab_report.py      # Lab report validation models
 │   │   ├── review.py          # Review and feedback schemas
 │   │   └── transport.py       # Transport data models
 │   ├── crud/
 │   │   ├── __init__.py
-│   │   ├── user.py            # User database operations
+│   │   ├── user.py            # User database operations (CRUD)
 │   │   ├── product.py         # Product CRUD operations
 │   │   ├── batch.py           # Batch management functions
 │   │   ├── transport.py       # Transport CRUD operations
 │   │   ├── lab_report.py      # Lab report database functions
 │   │   ├── material.py        # Material tracking operations
-│   │   ├── review.py          # Review management
+│   │   ├── review.py          # Review management functions
 │   │   └── admin.py           # Administrative operations
 │   ├── routes/
 │   │   ├── __init__.py
-│   │   ├── auth.py            # Authentication endpoints
+│   │   ├── auth.py            # Authentication endpoints (login, register, refresh)
 │   │   ├── users.py           # User management routes
-│   │   ├── products.py        # Product management API
-│   │   ├── batches.py         # Batch operations
-│   │   ├── transports.py      # Transport management
-│   │   ├── lab.py             # Laboratory operations
+│   │   ├── products.py        # Product management API endpoints
+│   │   ├── batches.py         # Batch operations endpoints
+│   │   ├── transports.py      # Transport management routes
+│   │   ├── lab.py             # Laboratory operations endpoints
 │   │   ├── ai.py              # AI and analytics endpoints
 │   │   ├── admin.py           # Administrative routes
 │   │   ├── reviews.py         # Review system endpoints
-│   │   └── public.py          # Public access routes
+│   │   └── public.py          # Public access routes (QR code access)
 │   ├── services/
 │   │   ├── __init__.py
 │   │   ├── ai_engine.py       # AI scoring and analysis service
 │   │   ├── carbon_engine.py   # Carbon emission calculations
-│   │   ├── change_analyzer.py # Material change detection
-│   │   └── email.py           # Email notification service
+│   │   └── change_analyzer.py # Material change detection and analysis
 │   └── utils/
 │       ├── __init__.py
 │       ├── logger.py          # Centralized logging utility
-│       ├── helpers.py         # Common helper functions
-│       └── email.py           # Email utilities
-├── logs/                      # Application logs directory
-├── requirements.txt           # Python dependencies
-├── API_BUILD_SUMMARY.md       # API endpoint documentation
-└── README.md                  # This file
+├── logs/                      # Application log files directory
+├── requirements.txt           # Python dependencies and versions
+├── API_BUILD_SUMMARY.md       # Comprehensive API endpoint documentation
+└── README.md                  # This documentation file
 ```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Python**: 3.9 or higher
+- **Package Manager**: pip (comes with Python)
+- **Terminal**: PowerShell, Command Prompt, or bash
+
+### Installation & Setup
+
+1. **Navigate to backend directory:**
+   ```powershell
+   cd backend
+   ```
+
+2. **Create virtual environment:**
+   ```powershell
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1  # Windows PowerShell
+   # source venv/bin/activate   # macOS/Linux bash
+   ```
+
+3. **Install dependencies:**
+   ```powershell
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment (optional):**
+   - Copy `.env.example` to `.env` (if exists)
+   - Set `DATABASE_URL` for production database
+   - Configure `JWT_SECRET_KEY` for security
+   - Set `GOOGLE_AI_API_KEY` for AI features
+
+5. **Initialize database:**
+   ```powershell
+   # Tables auto-create on first run via SQLAlchemy
+   # For custom migrations, use db_migrate_helper.py
+   ```
+
+6. **Start development server:**
+   ```powershell
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+7. **Access the application:**
+   - **API Documentation**: http://localhost:8000/docs
+   - **Alternative Docs**: http://localhost:8000/redoc
+   - **API Base URL**: http://localhost:8000/api
+   - **Health Check**: http://localhost:8000/
+
+---
+
+## 🔐 Authentication & Authorization
+
+### JWT-Based Security System
+
+- **Token Generation**: Secure JWT tokens with user claims and expiration
+- **Role-Based Access**: Four distinct user roles with specific permissions
+- **Session Management**: Stateless authentication with automatic expiration
+- **Token Refresh**: Secure token renewal without re-authentication
+- **Password Security**: bcrypt hashing with salt for secure storage
+
+### User Roles & Permissions Matrix
+
+| Role | Primary Functions | Key Permissions |
+|------|------------------|-----------------|
+| **manufacturer** | Product creation, batch management | Own products/batches CRUD, view AI scores |
+| **transporter** | Shipment tracking, emission calculation | Transport CRUD, route validation, emission reports |
+| **lab** | Testing, report generation | Lab reports CRUD, batch analysis, quality assurance |
+| **admin** | System oversight, user management | Full system access, audit logs, user administration |
+
+### Authentication Flow
+
+1. **Registration**: User selects role and provides credentials
+2. **Login**: Email/password validation returns JWT token
+3. **Token Storage**: Secure client-side storage (localStorage)
+4. **Request Authorization**: Bearer token in Authorization header
+5. **Token Validation**: Server verifies token and extracts user claims
+6. **Permission Check**: Role-based access control for each endpoint
+
+---
+
+## ✨ Core Features
+
+### 🏭 Product & Batch Management
+
+- **Product Lifecycle**: Create, update, and manage product catalogs
+- **Batch Tracking**: Detailed production batches with material composition
+- **Material Analysis**: Track ingredients, quantities, and sustainability metrics
+- **Status Monitoring**: Real-time batch status updates (pending → in_transit → completed)
+
+### 🚚 Transport & Carbon Tracking
+
+- **Route Management**: Origin-to-destination shipment tracking
+- **Emission Calculation**: Automatic CO2 calculations based on distance, mode, and weight
+- **Chain Validation**: Prevent circular routes and ensure supply chain integrity
+- **Analytics Dashboard**: Distance, emissions, and cost tracking
+
+### 🧪 Laboratory Operations
+
+- **Test Management**: Comprehensive testing workflows and methodologies
+- **Report Generation**: Detailed sustainability reports with certifications
+- **Quality Assurance**: Test result validation and compliance checking
+- **Status Tracking**: Monitor test progress and completion rates
+
+### 🤖 AI & Sustainability Analytics
+
+- **Score Generation**: Multi-factor sustainability scoring (environmental, ethical, safety, cost)
+- **Material Analysis**: Component-level impact assessment
+- **Change Detection**: Track improvements between batch versions
+- **Insights Engine**: AI-powered recommendations for optimization
+
+### 📊 Administrative Oversight
+
+- **User Management**: Complete user lifecycle management
+- **Audit Logging**: Comprehensive system activity tracking
+- **System Statistics**: Global metrics and performance monitoring
+- **Data Integrity**: Validation and consistency enforcement
+
+---
+
+## 🧱 Core Services
+
+### AI Engine (`services/ai_engine.py`)
+**Purpose**: Generate intelligent sustainability scores and insights
+- Multi-dimensional scoring algorithm (environmental, ethical, safety, cost)
+- Material composition analysis with sustainability metrics
+- Production method evaluation and optimization suggestions
+- Google Generative AI integration for advanced analytics
+
+### Carbon Engine (`services/carbon_engine.py`)
+**Purpose**: Calculate transportation emissions accurately
+- Distance-based calculations with real-world factors
+- Transport mode coefficients (road, rail, sea, air)
+- Weight and volume considerations for precision
+- Carbon intensity calculations per transport type
+
+### Change Analyzer (`services/change_analyzer.py`)
+**Purpose**: Track material modifications and implications
+- Batch comparison algorithms for version differences
+- Sustainability impact assessment between iterations
+- Cost variation analysis and efficiency tracking
+- Supply chain optimization recommendations
+
+---
+
+## 🗄️ Data Models
+
+| Model | Purpose | Key Relationships |
+|-------|---------|-------------------|
+| **User** | Authentication and role management | Roles, audit logs |
+| **Product** | Product definitions and specifications | Batches, manufacturer |
+| **Batch** | Production batch tracking | Materials, transports, reports, AI scores |
+| **Transport** | Shipment and logistics | Batches, emissions, transporter |
+| **LabReport** | Test results and findings | Batches, lab technician |
+| **AIScore** | Sustainability metrics | Batches, AI analysis |
+| **AuditLog** | System activity tracking | All models, users |
+| **Review** | User feedback system | Batches, consumers |
+
+---
+
+## 🚢 Production Deployment
+
+### Environment Setup
+
+1. **Database Configuration:**
+   ```powershell
+   # PostgreSQL recommended for production
+   DATABASE_URL=postgresql://user:password@host:5432/ecotrace
+   ```
+
+2. **Security Settings:**
+   ```powershell
+   JWT_SECRET_KEY=your-super-secure-secret-key-here
+   GOOGLE_AI_API_KEY=your-google-ai-api-key
+   CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+   DEBUG=false
+   ```
+
+### Server Deployment
+
+**Option 1: Gunicorn (Recommended)**
+```powershell
+pip install gunicorn
+gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+**Option 2: Docker**
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker"]
+```
+
+### Security Checklist
+
+- ✅ Use HTTPS/TLS in production
+- ✅ Implement rate limiting
+- ✅ Enable request logging and monitoring
+- ✅ Store secrets as environment variables
+- ✅ Configure CORS appropriately
+- ✅ Validate all user inputs
+- ✅ Implement comprehensive error handling
+- ✅ Use production-grade database
+- ✅ Regular security updates and patches
+
+---
+
+## 🧪 Testing & Development
+
+### Running Tests
+```powershell
+pip install pytest pytest-asyncio httpx
+pytest tests/ -v --cov=app --cov-report=html
+```
+
+### Development Workflow
+
+1. **Code Quality**: Use type hints and comprehensive docstrings
+2. **Error Handling**: Implement graceful exception management
+3. **Logging**: Utilize the centralized logger utility
+4. **Documentation**: Keep API documentation current
+5. **Testing**: Write unit and integration tests for new features
+
+### Code Standards
+
+- **Type Hints**: Full Python type annotation coverage
+- **Documentation**: Comprehensive docstrings for all functions
+- **Naming**: Descriptive, consistent naming conventions
+- **Structure**: Clean separation of concerns
+- **Security**: Input validation and secure coding practices
+
+---
+
+## 📚 API Documentation
+
+For detailed endpoint specifications, request/response formats, and implementation status, see:
+- **[API_BUILD_SUMMARY.md](./API_BUILD_SUMMARY.md)** - Complete endpoint reference
+- **Interactive Docs**: http://localhost:8000/docs (when running)
+- **OpenAPI Spec**: http://localhost:8000/openapi.json
+
+---
+
+## 🤝 Contributing
+
+### Adding New Features
+
+1. **Define Requirements**: Specify endpoints and data structures
+2. **Create Schemas**: Add Pydantic models in `schemas/`
+3. **Implement Models**: Define SQLAlchemy models in `models/`
+4. **Build CRUD Operations**: Add database functions in `crud/`
+5. **Create Routes**: Implement API endpoints in `routes/`
+6. **Add Business Logic**: Extend services as needed
+7. **Update Documentation**: Maintain API_BUILD_SUMMARY.md
+
+### Code Review Checklist
+
+- ✅ Type hints and docstrings present
+- ✅ Input validation implemented
+- ✅ Error handling comprehensive
+- ✅ Role-based access enforced
+- ✅ Tests written and passing
+- ✅ Documentation updated
+
+---
+
+## 📞 Support & Troubleshooting
+
+### Common Issues
+
+**Database Connection Errors:**
+- Verify DATABASE_URL format
+- Check database server status
+- Ensure proper permissions
+
+**Authentication Problems:**
+- Confirm JWT_SECRET_KEY is set
+- Check token expiration (default: 24 hours)
+- Verify user roles and permissions
+
+**API Errors:**
+- Review request/response formats
+- Check API_BUILD_SUMMARY.md for correct endpoints
+- Examine application logs in `logs/` directory
+
+### Getting Help
+
+1. Check the interactive API documentation at `/docs`
+2. Review API_BUILD_SUMMARY.md for endpoint details
+3. Examine application logs for error messages
+4. Test with different user roles to isolate permission issues
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See the main project repository for full license details.
 
 ---
 

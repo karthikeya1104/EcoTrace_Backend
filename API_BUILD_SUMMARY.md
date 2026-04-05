@@ -212,6 +212,32 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
 
 ---
 
+## Review System Endpoints
+
+### `/api/reviews` – User Feedback & Ratings
+
+| Method | Endpoint | Role Required | Description | Status |
+|--------|----------|---------------|-------------|--------|
+| POST | `/` | consumer | Submit review for batch | Complete |
+| GET | `/batch/{batch_id}` | Public | Get all reviews for specific batch | Complete |
+| GET | `/my-reviews` | consumer | List user's submitted reviews | Complete |
+| PUT | `/{review_id}` | consumer | Update user's own review | Complete |
+| DELETE | `/{review_id}` | consumer | Delete user's own review | Complete |
+
+---
+
+## Public Endpoints
+
+### `/api/public` – Public Access & Transparency
+
+| Method | Endpoint | Access Level | Description | Status |
+|--------|----------|--------------|-------------|--------|
+| GET | `/batch/{batch_id}` | Public | Get public batch information via QR | Complete |
+| GET | `/batch/{batch_id}/qr` | Public | Generate QR code for batch access | Complete |
+| GET | `/stats` | Public | Public system statistics | Complete |
+
+---
+
 ## Advanced Features
 
 ### Pagination & Search
@@ -229,14 +255,15 @@ All list endpoints support advanced pagination and filtering:
 
 ### Role-Based Access Control Matrix
 
-| Endpoint Category | manufacturer | transporter | lab | admin | public |
-|-------------------|--------------|-------------|-----|-------|--------|
-| Product CRUD | Own only | - | - | Yes | View only |
-| Batch CRUD | Own only | - | - | Yes | View scores |
-| Transport CRUD | - | Own only | - | Yes | - |
-| Lab Reports | View own batches | - | Own reports | Yes | - |
-| AI Scores | Own batches | - | - | Yes | Public access |
-| Admin Functions | - | - | - | Yes | - |
+| Endpoint Category | manufacturer | transporter | lab | admin | consumer | public |
+|-------------------|--------------|-------------|-----|-------|----------|--------|
+| Product CRUD | Own only | - | - | Yes | - | View only |
+| Batch CRUD | Own only | - | - | Yes | - | View scores |
+| Transport CRUD | - | Own only | - | Yes | - | - |
+| Lab Reports | View own batches | - | Own reports | Yes | - | - |
+| AI Scores | Own batches | - | - | Yes | - | Public access |
+| Admin Functions | - | - | - | Yes | - | - |
+| Reviews | - | - | - | - | Own reviews | View all |
 
 ---
 
@@ -497,6 +524,32 @@ This API documentation is part of the EcoTrace platform. All endpoints are subje
 | DELETE | `/users/{user_id}` | admin | Delete user |
 | GET | `/audit-logs` | admin | View system audit trail |
 | GET | `/statistics` | admin | System-wide statistics |
+
+---
+
+## 📝 Review Endpoints
+
+### `/api/reviews` – User Feedback System
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| POST | `/` | consumer | Submit batch review |
+| GET | `/batch/{batch_id}` | Public | Get batch reviews |
+| GET | `/my-reviews` | consumer | List user's reviews |
+| PUT | `/{review_id}` | consumer | Update review |
+| DELETE | `/{review_id}` | consumer | Delete review |
+
+---
+
+## 🌐 Public Endpoints
+
+### `/api/public` – Public Access
+
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| GET | `/batch/{batch_id}` | Public | Public batch info |
+| GET | `/batch/{batch_id}/qr` | Public | Generate QR code |
+| GET | `/stats` | Public | System statistics |
 
 ---
 

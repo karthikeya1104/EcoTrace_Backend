@@ -51,10 +51,9 @@ def get_reviews_by_batch_paginated(
     limit: int
 ):
     base_query = db.query(Review).filter(Review.batch_id == batch_id)
-
     total = base_query.count()
 
-    rows = (
+    query = (
         db.query(
             Review.id,
             Review.rating,
@@ -65,13 +64,22 @@ def get_reviews_by_batch_paginated(
         )
         .join(User, User.id == Review.user_id)
         .filter(Review.batch_id == batch_id)
-        .order_by(Review.created_at.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
     )
 
-    # Transform → clean JSON
+    # ✅ Apply special ordering ONLY for first page
+    if user_id is not None and skip == 0:
+        query = query.order_by(
+            case(
+                (Review.user_id == user_id, 0),
+                else_=1
+            ),
+            Review.created_at.desc()
+        )
+    else:
+        query = query.order_by(Review.created_at.desc())
+
+    rows = query.offset(skip).limit(limit).all()
+
     items = [
         {
             "id": r.id,
@@ -81,7 +89,7 @@ def get_reviews_by_batch_paginated(
             "user": {
                 "name": r.user_name
             },
-            "is_mine": r.user_id == user_id
+            "is_mine": user_id is not None and r.user_id == user_id
         }
         for r in rows
     ]
@@ -96,20 +104,41 @@ def get_reviews_by_product_paginated(
     limit: int
 ):
     query = (
-        db.query(Review)
+        db.query(
+            Review.id,
+            Review.rating,
+            Review.comment,
+            Review.created_at,
+            Review.batch_id,  # ✅ IMPORTANT
+            User.name.label("user_name")
+        )
         .join(Batch, Batch.id == Review.batch_id)
-        .options(joinedload(Review.user))
+        .join(User, User.id == Review.user_id)
         .filter(Batch.product_id == product_id)
     )
 
     total = query.count()
 
-    items = (
+    rows = (
         query.order_by(Review.created_at.desc())
         .offset(skip)
         .limit(limit)
         .all()
     )
+
+    items = [
+        {
+            "id": r.id,
+            "rating": r.rating,
+            "comment": r.comment,
+            "created_at": r.created_at,
+            "batch_id": r.batch_id,
+            "user": {
+                "name": r.user_name
+            }
+        }
+        for r in rows
+    ]
 
     return items, total
 

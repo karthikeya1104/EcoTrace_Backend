@@ -5,6 +5,7 @@ from app.core.roles import require_role
 from app.models.user import UserRole
 from app.schemas.review import ReviewCreate
 from app.crud.review import create_or_update_review, get_consumer_dashboard, get_reviews_by_batch_paginated, get_reviews_by_product_paginated, get_review_summary, delete_review, get_user_reviews_paginated
+from app.core.security import get_current_user_optional
 
 router = APIRouter()
 
@@ -24,12 +25,14 @@ def list_batch_reviews(
     skip: int = 0,
     limit: int = 10,
     db: Session = Depends(get_db),
-    user = Depends(require_role(UserRole.consumer))
+    user = Depends(get_current_user_optional)
 ):
+    user_id = user.id if user else None  # ✅ FIX HERE
+
     items, total = get_reviews_by_batch_paginated(
         db,
         batch_id,
-        user.id,
+        user_id,
         skip,
         limit
     )

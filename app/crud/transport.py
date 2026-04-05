@@ -3,6 +3,7 @@ from sqlalchemy import or_, func
 from app.models.transport import Transport
 from app.models.batch import Batch
 from app.services.carbon_engine import calculate_transport_emission
+from app.models.product import Product
 
 
 # =====================================================
@@ -171,7 +172,10 @@ def get_my_transports(
     query = (
         db.query(Transport)
         .join(Batch)
-        .options(joinedload(Transport.batch))
+        .join(Product)  # ✅ join Product table
+        .options(
+            joinedload(Transport.batch).joinedload(Batch.product) 
+        )
         .filter(Transport.transporter_id == transporter_id)
     )
 
@@ -180,7 +184,7 @@ def get_my_transports(
             or_(
                 Transport.origin.ilike(f"%{search}%"),
                 Transport.destination.ilike(f"%{search}%"),
-                Batch.product_name.ilike(f"%{search}%"),
+                Product.name.ilike(f"%{search}%"),   # ✅ FIXED
                 Batch.batch_code.ilike(f"%{search}%"),
             )
         )

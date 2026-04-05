@@ -198,7 +198,6 @@ def verify_lab_report(db: Session, report_id: int):
 
     # ✅ Update batch status
     report.batch.status = BatchStatus.verified
-    report.batch.validation_status = ValidationStatus.auto_verified
 
     db.commit()
     db.refresh(report)
@@ -216,6 +215,7 @@ def reject_lab_report(db: Session, report_id: int, reason: str | None = None):
         raise HTTPException(status_code=400, detail="Cannot reject verified report")
 
     report.batch.status = BatchStatus.rejected
+    report.verified = True  # Mark as "processed" even if rejected
 
     if reason:
         report.notes = (report.notes or "") + f"\n[ADMIN REJECTED]: {reason}"

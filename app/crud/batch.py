@@ -3,7 +3,7 @@ import traceback
 from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
-from app.models.batch import Batch, ValidationStatus
+from app.models.batch import Batch, BatchStatus, ValidationStatus
 from app.models.product import Product
 from app.models.ai_score import AIScore
 from app.services.change_analyzer import classify_change
@@ -129,7 +129,7 @@ def create_batch(
 
             batch = Batch(**batch_payload, product_id=product_id)
             db.add(batch)
-            db.flush()  # ✅ generate batch.id
+            db.flush()
 
             # -------- 3. Add Materials --------
             add_materials(
@@ -176,6 +176,7 @@ def create_batch(
                 # ✅ NO CHANGE → reuse everything
                 if change_type == "no_change":
                     batch.validation_status = ValidationStatus.auto_verified
+                    batch.status = BatchStatus.verified
 
                     # ---- Reuse AI score ----
                     ai_rating = (
@@ -215,6 +216,7 @@ def create_batch(
                         batch,
                         current_materials
                     )
+                    batch.status = BatchStatus.verified
 
                 # ✅ MAJOR CHANGE → Lab required
                 else:
@@ -224,7 +226,7 @@ def create_batch(
                         batch,
                         current_materials
                     )
-
+                
             # ✅ FIRST BATCH
             else:
                 batch.validation_status = ValidationStatus.lab_required

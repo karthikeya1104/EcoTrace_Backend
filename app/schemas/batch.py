@@ -73,6 +73,24 @@ class BatchMaterialResponse(BaseModel):
 # RESPONSE
 # =========================
 
+class BatchListItem(BaseModel):
+    id: int
+    batch_code: str
+    manufacture_date: datetime
+    expiry_date: Optional[datetime]
+    status: BatchStatus
+    created_at: datetime
+
+    product: ProductMini  # keep minimal product info
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    @property
+    def qr_url(self) -> str:
+        return f"{APP_BASE_URL}/public/batch/{self.id}"
+
+
 class BatchResponse(BaseModel):
     id: int
     product_id: int
@@ -104,4 +122,4 @@ class BatchListResponse(BaseModel):
     page: int
     limit: int
     total_pages: int
-    items: List[BatchResponse]
+    items: List[BatchListItem]
