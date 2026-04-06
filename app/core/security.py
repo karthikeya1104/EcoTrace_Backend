@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import os
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException
@@ -8,7 +9,11 @@ from app.database import SessionLocal
 from app.models.user import User
 
 # ---------- JWT Settings ----------
-SECRET_KEY = "CHANGE_ME_IN_ENV"
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY is not set in environment variables")
+
 ALGORITHM = "HS256"
 
 ACCESS_TOKEN_EXPIRE_DAYS = 30
