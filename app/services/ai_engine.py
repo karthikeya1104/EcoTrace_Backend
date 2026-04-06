@@ -24,19 +24,23 @@ def generate_ai_rating(product, batch, materials):
     }
 
     prompt = f"""
-        You are a textile sustainability expert.
+        You are a sustainability expert.
 
-        Evaluate the sustainability of this product batch.
+        Evaluate the environmental sustainability of the given product or batch.
 
-        Consider:
-        - material sustainability
-        - water usage
-        - carbon footprint
-        - synthetic vs natural fibers
-        - recyclability
-        - microplastic impact
+        Consider factors such as:
+        - material sustainability (renewable, recycled, or harmful materials)
+        - energy and water usage in production
+        - carbon footprint and emissions
+        - lifecycle impact (durability, reuse, disposal)
+        - recyclability or biodegradability
+        - environmental and ecological impact (including pollution, waste, microplastics if applicable)
 
-        Gice rating (score) Out of 100
+        If the provided data is incomplete or insufficient, use general knowledge of similar products and industry standards to make a reasonable assessment. Clearly base your reasoning on typical characteristics when doing so.
+
+        Give a sustainability rating out of 100, where:
+        - 0 = extremely harmful to environment
+        - 100 = highly sustainable and eco-friendly
 
         Input data:
         {json.dumps(payload_data, indent=2)}
@@ -44,11 +48,10 @@ def generate_ai_rating(product, batch, materials):
         Return STRICT JSON ONLY in this format:
 
         {{
-        "rating": number(0 -100),
-        "reasoning": "short explanation"
+        "rating": number (0-100),
+        "reasoning": "short clear explanation"
         }}
-    """
-
+        """
     try:
         response = model.generate_content(
             prompt,
