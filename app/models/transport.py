@@ -24,3 +24,4 @@ class Transport(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     batch = relationship("Batch", back_populates="transports")
+    transporter = relationship("User", foreign_keys=[transporter_id])

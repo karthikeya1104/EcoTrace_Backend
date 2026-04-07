@@ -1,6 +1,6 @@
 # EcoTrace API Build Summary
 
-## Implementation Status: Complete (April 2026)
+## Implementation Status: Complete
 
 All core API endpoints are fully implemented and production-ready. The EcoTrace backend features comprehensive role-based access control, robust data validation, advanced pagination, powerful search capabilities, and a modular service architecture optimized for AI-driven sustainability analysis and carbon emission calculations.
 
@@ -10,13 +10,13 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
 
 ### `/api/auth` – User Authentication & Session Management
 
-| Method | Endpoint | Access Level | Description | Status |
-|--------|----------|--------------|-------------|--------|
-| POST | `/register` | Public | Create new user account with role selection | Complete |
-| POST | `/login` | Public | Authenticate user and return JWT token | Complete |
-| GET | `/me` | Authenticated | Retrieve current user profile information | Complete |
-| POST | `/refresh` | Authenticated | Refresh JWT token before expiration | Complete |
-| POST | `/logout` | Authenticated | Invalidate current session token | Complete |
+| Method | Endpoint         | Access Level  | Description                                    
+| ------ | ---------------- | ------------- | -----------------------------------------------
+| POST   | `/auth/register` | Public        | Create a new user account (with role selection)
+| POST   | `/auth/login`    | Public        | Authenticate user and return JWT token         
+| GET    | `/auth/me`       | Authenticated | Retrieve current user profile information      
+| POST   | `/auth/refresh`  | Authenticated | Refresh JWT token before expiration            
+
 
 **Request/Response Examples:**
 ```json
@@ -25,7 +25,6 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
   "email": "manufacturer@company.com",
   "password": "securePass123",
   "role": "manufacturer",
-  "company_name": "Green Manufacturing Inc"
 }
 
 // Response: 201 Created
@@ -33,7 +32,6 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
   "id": 1,
   "email": "manufacturer@company.com",
   "role": "manufacturer",
-  "company_name": "Green Manufacturing Inc",
   "created_at": "2026-04-05T10:30:00Z"
 }
 ```
@@ -44,25 +42,26 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
 
 ### `/api/products` – Product Lifecycle Management
 
-| Method | Endpoint | Role Required | Description | Status |
-|--------|----------|---------------|-------------|--------|
-| POST | `/` | manufacturer | Create new product with specifications | Complete |
-| GET | `/my-products/all` | manufacturer | List all products owned by manufacturer | Complete |
-| GET | `/my-products/stats` | manufacturer | Dashboard statistics (counts, metrics) | Complete |
-| GET | `/{product_id}` | admin | Get detailed product information | Complete |
-| GET | `/` | admin | List all products (paginated, admin view) | Complete |
-| PUT | `/{product_id}` | admin | Update product details | Complete |
-| DELETE | `/{product_id}` | admin | Remove product from system | Complete |
+| Method | Endpoint                          | Role Required | Description                                             |
+| ------ | --------------------------------- | ------------- | ------------------------------------------------------- |
+| POST   | `/api/products/`                  | manufacturer  | Create a new product with specifications                |
+| GET    | `/api/products/my-products/all`   | manufacturer  | List all products owned by the manufacturer             |
+| GET    | `/api/products/my-products/stats` | manufacturer  | Retrieve product dashboard statistics (counts, metrics) |
+| GET    | `/api/products/{product_id}`      | admin         | Get detailed product information                        |
+| GET    | `/api/products/`                  | admin         | List all products (paginated, admin view)               |
+| PUT    | `/api/products/{product_id}`      | admin         | Update product details                                  |
+| DELETE | `/api/products/{product_id}`      | admin         | Remove product from the system                          |
+
 
 ### `/api/batches` – Batch Production Tracking
+| Method | Endpoint                    | Role Required       | Description                                         |
+| ------ | --------------------------- | ------------------- | --------------------------------------------------- |
+| POST   | `/api/batches/{product_id}` | manufacturer        | Create a production batch with associated materials |
+| GET    | `/api/batches/my`           | manufacturer        | List manufacturer’s batches (paginated, searchable) |
+| GET    | `/api/batches/{batch_id}`   | manufacturer, admin | Retrieve comprehensive batch details                |
+| PUT    | `/api/batches/{batch_id}`   | manufacturer        | Update batch information                            |
+| DELETE | `/api/batches/{batch_id}`   | manufacturer        | Delete batch (only if not in transit)               |
 
-| Method | Endpoint | Role Required | Description | Status |
-|--------|----------|---------------|-------------|--------|
-| POST | `/{product_id}` | manufacturer | Create production batch with materials | Complete |
-| GET | `/my` | manufacturer | List manufacturer's batches (paginated, searchable) | Complete |
-| GET | `/{batch_id}` | manufacturer, admin | Get comprehensive batch details | Complete |
-| PUT | `/{batch_id}` | manufacturer | Update batch information | Complete |
-| DELETE | `/{batch_id}` | manufacturer | Delete batch (if not in transit) | Complete |
 
 **Batch Creation Example:**
 ```json
@@ -73,10 +72,8 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
   "materials": [
     {
       "name": "Organic Cotton",
-      "quantity": 500,
-      "unit": "kg",
       "percentage": 50.0,
-      "sustainability_score": 8.5
+      "source": "Source location / place"
     }
   ]
 }
@@ -87,17 +84,17 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
 ## Transporter Endpoints
 
 ### `/api/transports` – Shipment & Emission Management
+| Method | Endpoint                                             | Role Required      | Description                                              |
+| ------ | ---------------------------------------------------- | ------------------ | -------------------------------------------------------- |
+| POST   | `/api/transports/`                                   | transporter        | Create a new transport record with emission calculations |
+| GET    | `/api/transports/my`                                 | transporter        | List transporter’s shipments (paginated)                 |
+| GET    | `/api/transports/my/stats`                           | transporter        | Retrieve dashboard metrics (distance, emissions, cost)   |
+| GET    | `/api/transports/batch/{batch_id}/available-origins` | transporter        | Get valid next-hop origins for batch routing             |
+| GET    | `/api/transports/batch/{batch_id}`                   | manufacturer       | Retrieve all transports for a specific batch             |
+| GET    | `/api/transports/{transport_id}`                     | transporter, admin | Get detailed transport information                       |
+| PUT    | `/api/transports/{transport_id}`                     | admin              | Update transport details                                 |
+| DELETE | `/api/transports/{transport_id}`                     | admin              | Remove transport record                                  |
 
-| Method | Endpoint | Role Required | Description | Status |
-|--------|----------|---------------|-------------|--------|
-| POST | `/` | transporter | Create transport record with emission calc | Complete |
-| GET | `/my` | transporter | List transporter's shipments (paginated) | Complete |
-| GET | `/my/stats` | transporter | Dashboard metrics (distance, emissions, cost) | Complete |
-| GET | `/batch/{batch_id}/available-origins` | transporter | Valid next-hop origins for batch routing | Complete |
-| GET | `/batch/{batch_id}` | manufacturer | Get all transports for specific batch | Complete |
-| GET | `/{transport_id}` | transporter, admin | Detailed transport information | Complete |
-| PUT | `/{transport_id}` | admin | Update transport details | Complete |
-| DELETE | `/{transport_id}` | admin | Remove transport record | Complete |
 
 **Transport Creation with Auto-Emission Calculation:**
 ```json
@@ -107,9 +104,7 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
   "origin": "Factory A, Mumbai",
   "destination": "Warehouse B, Delhi",
   "distance_km": 1500,
-  "transport_mode": "road",
-  "weight_kg": 2500,
-  "container_type": "truck"
+  "Vehicle_type": "truck"
 }
 
 // Response includes calculated emissions
@@ -119,10 +114,8 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
   "origin": "Factory A, Mumbai",
   "destination": "Warehouse B, Delhi",
   "distance_km": 1500,
-  "transport_mode": "road",
-  "weight_kg": 2500,
+  "Vehicle_type": "truck",
   "emissions_kg_co2": 375.0,  // Auto-calculated
-  "cost_usd": 450.0,
   "created_at": "2026-04-05T11:00:00Z"
 }
 ```
@@ -131,33 +124,36 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
 
 ## Lab Endpoints
 
-### `/api/lab` – Laboratory Testing & Reporting
+### '/api/labs' & '/api/lab-reports' – Laboratory Testing & Reporting
 
-| Method | Endpoint | Role Required | Description | Status |
-|--------|----------|---------------|-------------|--------|
-| POST | `/reports` | lab | Create comprehensive lab report for batch | Complete |
-| GET | `/reports` | lab | List lab technician's reports | Complete |
-| GET | `/reports/{report_id}` | lab, manufacturer | Get detailed report information | Complete |
-| PUT | `/reports/{report_id}` | lab | Update report findings | Complete |
-| GET | `/pending` | lab | Get batches awaiting laboratory testing | Complete |
+| Method | Endpoint                            | Role Required     | Description                                   |
+| ------ | ----------------------------------- | ----------------- | --------------------------------------------- |
+| GET    | `/api/labs/pending-tests`           | lab               | Retrieve batches awaiting laboratory testing  |
+| POST   | `/api/lab-reports/batch/{batch_id}` | lab               | Create a comprehensive lab report for a batch |
+| GET    | `/api/lab-reports/`                 | lab               | List all lab reports (lab technician view)    |
+| GET    | `/api/lab-reports/{report_id}`      | lab, manufacturer | Retrieve detailed report information          |
+| PATCH  | `/api/lab-reports/{report_id}`      | admin             | Update report findings                        |
+| DELETE | `/api/lab-reports/{report_id}`      | admin             | Delete a lab report                           |
+
 
 **Lab Report Structure:**
 ```json
-// POST /api/lab/reports
+// POST /api/lab-reports/batch/{batch_id}
 {
-  "batch_id": 1,
-  "test_scope": "Full Sustainability Analysis",
-  "methodology": "ISO 14001 Standards",
-  "results": {
-    "carbon_footprint": "2.3 kg CO2 per unit",
-    "water_usage": "1.5 liters per unit",
-    "energy_consumption": "0.8 kWh per unit",
-    "recyclability": "85%"
-  },
-  "certifications": ["Fair Trade", "Organic Certified"],
-  "recommendations": "Consider renewable energy sources",
-  "test_duration_hours": 24,
-  "status": "completed"
+  "analysis_data": [
+    {
+      "title": "Analysis type",
+      "content": "Test result"
+    },
+    {
+      "title": "Analysis type2",
+      "content": "Test result2"
+    }
+  ],
+  "certifications": "Fair Trade, Organic Certified",
+  "notes": "Consider renewable energy sources",
+  "safety_status": "safe",
+  "lab_score": 4
 }
 ```
 
@@ -167,12 +163,13 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
 
 ### `/api/ai` – Sustainability Intelligence
 
-| Method | Endpoint | Role Required | Description | Status |
-|--------|----------|---------------|-------------|--------|
-| GET | `/batch/{batch_id}/score` | Public | Get AI-calculated sustainability score | Complete |
-| POST | `/batch/{batch_id}/analyze-materials` | manufacturer | Detailed material-level analysis | Complete |
-| POST | `/batch/{batch_id}/generate-score` | admin | Regenerate AI score for batch | Complete |
-| GET | `/batch/{batch_id}/insights` | Public | AI-generated sustainability insights | Complete |
+| Method | Endpoint                                     | Role Required | Description                                            |
+| ------ | -------------------------------------------- | ------------- | ------------------------------------------------------ |
+| GET    | `/api/ai/batch/{batch_id}/score`             | Public        | Retrieve AI-calculated sustainability score            |
+| POST   | `/api/ai/batch/{batch_id}/analyze-materials` | manufacturer  | Perform detailed material-level analysis for the batch |
+| POST   | `/api/ai/batch/{batch_id}/generate-score`    | admin         | Regenerate AI sustainability score for the batch       |
+| GET    | `/api/ai/batch/{batch_id}/insights`          | Public        | Retrieve AI-generated sustainability insights          |
+
 
 **AI Score Response:**
 ```json
@@ -201,14 +198,17 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
 
 ### `/api/admin` – System Administration
 
-| Method | Endpoint | Role Required | Description | Status |
-|--------|----------|---------------|-------------|--------|
-| GET | `/users` | admin | List all system users (paginated) | Complete |
-| GET | `/users/{user_id}` | admin | Get detailed user information | Complete |
-| PUT | `/users/{user_id}` | admin | Update user details and permissions | Complete |
-| DELETE | `/users/{user_id}` | admin | Deactivate user account | Complete |
-| GET | `/audit-logs` | admin | View system activity audit trail | Complete |
-| GET | `/statistics` | admin | Comprehensive system-wide statistics | Complete |
+| Method | Endpoint                            | Role Required | Description                           |
+| ------ | ----------------------------------- | ------------- | ------------------------------------- |
+| GET    | `/api/users/`                       | admin         | List all system users (paginated)     |
+| GET    | `/api/users/{user_id}`              | admin         | Retrieve detailed user information    |
+| PUT    | `/api/users/{user_id}`              | admin         | Update user details and permissions   |
+| DELETE | `/api/users/{user_id}`              | admin         | Deactivate (or delete) a user account |
+| GET    | `/admin/dashboard`                  | admin         | View admin dashboard                  |
+| GET    | `/admin/reports`                    | admin         | List reports                          |
+| GET    | `/admin/reports/{report_id}`        | admin         | Get report details                    |
+| POST   | `/admin/reports/{report_id}/verify` | admin         | Verify report                         |
+| POST   | `/admin/reports/{report_id}/reject` | admin         | Reject report                         |
 
 ---
 
@@ -216,13 +216,15 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
 
 ### `/api/reviews` – User Feedback & Ratings
 
-| Method | Endpoint | Role Required | Description | Status |
-|--------|----------|---------------|-------------|--------|
-| POST | `/` | consumer | Submit review for batch | Complete |
-| GET | `/batch/{batch_id}` | Public | Get all reviews for specific batch | Complete |
-| GET | `/my-reviews` | consumer | List user's submitted reviews | Complete |
-| PUT | `/{review_id}` | consumer | Update user's own review | Complete |
-| DELETE | `/{review_id}` | consumer | Delete user's own review | Complete |
+| Method | Endpoint                                | Role Required | Description                                |
+| ------ | --------------------------------------- | ------------- | ------------------------------------------ |
+| POST   | `/api/reviews/batch/{batch_id}`         | consumer      | Submit a review for a specific batch       |
+| GET    | `/api/reviews/batch/{batch_id}`         | Public        | Retrieve all reviews for a specific batch  |
+| GET    | `/api/reviews/me`                       | consumer      | List reviews submitted by the current user |
+| DELETE | `/api/reviews/{review_id}`              | consumer      | Delete the user’s own review               |
+| GET    | `/api/reviews/dashboard`                | consumer      | Consumer dashboard                         |
+| GET    | `/api/reviews/product/{product_id}`     | Public        | List product reviews                       |
+| GET    | `/api/reviews/batch/{batch_id}/summary` | Public        | Get batch review summary                   |
 
 ---
 
@@ -230,12 +232,10 @@ All core API endpoints are fully implemented and production-ready. The EcoTrace 
 
 ### `/api/public` – Public Access & Transparency
 
-| Method | Endpoint | Access Level | Description | Status |
-|--------|----------|--------------|-------------|--------|
-| GET | `/batch/{batch_id}` | Public | Get public batch information via QR | Complete |
-| GET | `/batch/{batch_id}/qr` | Public | Generate QR code for batch access | Complete |
-| GET | `/stats` | Public | Public system statistics | Complete |
-
+| Method | Endpoint                   | Access Level | Description                                     
+| ------ | -------------------------- | ------------ | ----------------------------------------------- 
+| GET    | `/api/batch/{batch_id}`    | Public       | Retrieve public batch information (via QR code)
+ 
 ---
 
 ## Advanced Features
@@ -362,27 +362,6 @@ Emissions (kg CO2) = Distance (km) × Weight (kg) × Emission Factor (kg CO2/kg/
 
 ---
 
-## API Evolution & Versioning
-
-### Current Version: v1.0 (April 2026)
-
-**Versioning Strategy:**
-- URL-based versioning: `/api/v1/`
-- Backward compatibility maintained
-- Deprecation notices for breaking changes
-- Semantic versioning (MAJOR.MINOR.PATCH)
-
-### Planned Enhancements
-
-**Phase 2 Features:**
-- Real-time notifications via WebSocket
-- Advanced analytics dashboard
-- Third-party integrations (ERP, IoT sensors)
-- Mobile application API
-- Multi-language support
-
----
-
 ## Testing & Quality Assurance
 
 ### Test Coverage Areas
@@ -439,117 +418,6 @@ pytest tests/test_ai_engine.py
 ## License & Attribution
 
 This API documentation is part of the EcoTrace platform. All endpoints are subject to the terms of service and usage policies defined in the main project repository.
-
----
-
-## 🏭 Manufacturer Endpoints
-
-### `/api/products` – Product Management
-
-| Method | Endpoint | Role | Description |
-|--------|----------|------|-------------|
-| POST | `/` | manufacturer | Create new product |
-| GET | `/my-products/all` | manufacturer | List your products |
-| GET | `/my-products/stats` | manufacturer | Dashboard metrics (counts, batch info) |
-| GET | `/{product_id}` | admin | Get product details with batches |
-| GET | `/` | admin | List all products (paginated) |
-| PUT | `/{product_id}` | admin | Update product |
-| DELETE | `/{product_id}` | admin | Delete product |
-
-### `/api/batches` – Batch Management
-
-| Method | Endpoint | Role | Description |
-|--------|----------|------|-------------|
-| POST | `/{product_id}` | manufacturer | Create batch with materials |
-| GET | `/my` | manufacturer | List your batches (paginated, searchable) |
-| GET | `/{batch_id}` | manufacturer, admin | Get batch details |
-| PUT | `/{batch_id}` | manufacturer | Update batch |
-| DELETE | `/{batch_id}` | manufacturer | Delete batch |
-
----
-
-## 🚚 Transporter Endpoints
-
-### `/api/transports` – Transport & Shipment Management
-
-| Method | Endpoint | Role | Description |
-|--------|----------|------|-------------|
-| POST | `/` | transporter | Create transport with emission calc |
-| GET | `/my` | transporter | List your transports (paginated) |
-| GET | `/my/stats` | transporter | Dashboard stats (emissions, distance) |
-| GET | `/batch/{batch_id}/available-origins` | transporter | Valid next-hop origins for batch |
-| GET | `/batch/{batch_id}` | manufacturer | Get transports for batch |
-| GET | `/{transport_id}` | transporter, admin | Get transport details |
-| PUT | `/{transport_id}` | admin | Update transport |
-| DELETE | `/{transport_id}` | admin | Delete transport |
-
----
-
-## 🧪 Lab Endpoints
-
-### `/api/lab` – Lab Operations
-
-| Method | Endpoint | Role | Description |
-|--------|----------|------|-------------|
-| POST | `/reports` | lab | Create lab report for batch |
-| GET | `/reports` | lab | List your reports |
-| GET | `/reports/{report_id}` | lab, manufacturer | Get report details |
-| PUT | `/reports/{report_id}` | lab | Update report |
-| GET | `/pending` | lab | Get pending test requests |
-
----
-
-## 🤖 AI & Analytics Endpoints
-
-### `/api/ai` – Sustainability Analysis
-
-| Method | Endpoint | Role | Description |
-|--------|----------|------|-------------|
-| GET | `/batch/{batch_id}/score` | Public | Get AI sustainability score |
-| POST | `/batch/{batch_id}/analyze-materials` | manufacturer | Material-level analysis |
-| POST | `/batch/{batch_id}/generate-score` | admin | Regenerate AI score |
-| GET | `/batch/{batch_id}/insights` | Public | Sustainability insights |
-
----
-
-## 👥 Admin Endpoints
-
-### `/api/admin` – System Administration
-
-| Method | Endpoint | Role | Description |
-|--------|----------|------|-------------|
-| GET | `/users` | admin | List all users |
-| GET | `/users/{user_id}` | admin | Get user details |
-| PUT | `/users/{user_id}` | admin | Update user |
-| DELETE | `/users/{user_id}` | admin | Delete user |
-| GET | `/audit-logs` | admin | View system audit trail |
-| GET | `/statistics` | admin | System-wide statistics |
-
----
-
-## 📝 Review Endpoints
-
-### `/api/reviews` – User Feedback System
-
-| Method | Endpoint | Role | Description |
-|--------|----------|------|-------------|
-| POST | `/` | consumer | Submit batch review |
-| GET | `/batch/{batch_id}` | Public | Get batch reviews |
-| GET | `/my-reviews` | consumer | List user's reviews |
-| PUT | `/{review_id}` | consumer | Update review |
-| DELETE | `/{review_id}` | consumer | Delete review |
-
----
-
-## 🌐 Public Endpoints
-
-### `/api/public` – Public Access
-
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| GET | `/batch/{batch_id}` | Public | Public batch info |
-| GET | `/batch/{batch_id}/qr` | Public | Generate QR code |
-| GET | `/stats` | Public | System statistics |
 
 ---
 

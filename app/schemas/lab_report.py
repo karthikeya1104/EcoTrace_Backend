@@ -22,7 +22,7 @@ class LabReportCreate(BaseModel):
     certifications: str | None = None
     notes: str | None = None
     safety_status: str = Field(..., pattern="^(safe|caution|unsafe)$")
-    lab_score: float = Field(..., ge=0, le=100)
+    lab_score: float = Field(..., ge=0, le=5)
 
 
 class LabReportUpdate(BaseModel):
@@ -30,7 +30,7 @@ class LabReportUpdate(BaseModel):
     certifications: Optional[str] = None
     notes: Optional[str] = None
     safety_status: Optional[str] = Field(None, pattern="^(safe|caution|unsafe)$")
-    lab_score: Optional[float] = Field(None, ge=0, le=100)
+    lab_score: Optional[float] = Field(None, ge=0, le=5)
 
 
 class LabReportResponse(BaseModel):

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, selectinload
+
 from app.database import SessionLocal
 from app.models.batch import Batch
 from app.models.product import Product
@@ -10,12 +11,14 @@ from app.models.material import Material, BatchMaterial
 
 router = APIRouter()
 
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 
 @router.get("/batch/{batch_id}")
 def view_batch(batch_id: int, db: Session = Depends(get_db)):
@@ -25,9 +28,9 @@ def view_batch(batch_id: int, db: Session = Depends(get_db)):
         .options(
             selectinload(Batch.product),
             selectinload(Batch.materials).selectinload(BatchMaterial.material),
-            selectinload(Batch.lab_reports),
+            selectinload(Batch.lab_reports).selectinload(LabReport.lab),
             selectinload(Batch.ai_scores),
-            selectinload(Batch.transports),
+            selectinload(Batch.transports).selectinload(Transport.transporter)
         )
         .filter(Batch.id == batch_id)
         .first()
@@ -73,6 +76,7 @@ def view_batch(batch_id: int, db: Session = Depends(get_db)):
         "transports": [
             {
                 "id": t.id,
+                "transporter_name": t.transporter.name if t.transporter else None,
                 "origin": t.origin,
                 "destination": t.destination,
                 "distance_km": t.distance_km,
@@ -87,6 +91,7 @@ def view_batch(batch_id: int, db: Session = Depends(get_db)):
         "lab_reports": [
             {
                 "id": l.id,
+                "lab_name": l.lab.name if l.lab else None,
                 "analysis": l.analysis_data,
                 "certifications": l.certifications,
                 "safety_status": (
@@ -105,5 +110,7 @@ def view_batch(batch_id: int, db: Session = Depends(get_db)):
             "rating": ai_score.rating,
             "reasoning": ai_score.reasoning,
             "generated_at": ai_score.generated_at,
-        } if ai_score else None,
+        }
+        if ai_score
+        else None,
     }
