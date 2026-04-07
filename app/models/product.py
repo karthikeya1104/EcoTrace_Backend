@@ -15,3 +15,4 @@ class Product(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     batches = relationship("Batch", back_populates="product")
+    manufacturer = relationship("User", foreign_keys=[manufacturer_id])

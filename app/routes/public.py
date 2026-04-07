@@ -51,6 +51,7 @@ def view_batch(batch_id: int, db: Session = Depends(get_db)):
         },
         "batch": {
             "id": batch.id,
+            "manufacturer_name": batch.product.manufacturer.name if batch.product.manufacturer else None,
             "code": batch.batch_code,
             "manufacture_date": batch.manufacture_date,
             "expiry_date": batch.expiry_date,
