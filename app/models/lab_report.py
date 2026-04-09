@@ -30,6 +30,6 @@ class LabReport(Base):
     verified = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # 🔥 Relationships
+    #  Relationships
     batch = relationship("Batch", back_populates="lab_reports")
     lab = relationship("User")

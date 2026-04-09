@@ -464,7 +464,7 @@ All list endpoints support pagination and search parameters for filtering and na
 
 ---
 
-## 📊 Error Handling
+## Error Handling
 
 All endpoints return standard error responses with appropriate HTTP status codes:
 - `200` – Success
@@ -493,20 +493,20 @@ Validates data integrity and chain continuity.
 
 ---
 
-## 🚀 Integration Checklist
+## Integration Checklist
 
-- ✅ All CRUD operations implemented
-- ✅ Role-based access control enforced
-- ✅ Pagination and search added
-- ✅ Carbon calculation working
-- ✅ AI score endpoints ready for ML integration
-- ✅ Audit logging implemented
-- ✅ Error handling comprehensive
-- ✅ JWT authentication working
+-  All CRUD operations implemented
+-  Role-based access control enforced
+-  Pagination and search added
+-  Carbon calculation working
+-  AI score endpoints ready for ML integration
+-  Audit logging implemented
+-  Error handling comprehensive
+-  JWT authentication working
 
 ---
 
-## 📝 Notes
+##  Notes
 
 - All endpoints enforce role-based access control
 - Pagination defaults: page=1, limit=10

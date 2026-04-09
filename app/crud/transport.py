@@ -172,7 +172,7 @@ def get_my_transports(
     query = (
         db.query(Transport)
         .join(Batch)
-        .join(Product)  # ✅ join Product table
+        .join(Product)  #  join Product table
         .options(
             joinedload(Transport.batch).joinedload(Batch.product) 
         )
@@ -184,7 +184,7 @@ def get_my_transports(
             or_(
                 Transport.origin.ilike(f"%{search}%"),
                 Transport.destination.ilike(f"%{search}%"),
-                Product.name.ilike(f"%{search}%"),   # ✅ FIXED
+                Product.name.ilike(f"%{search}%"),   #  FIXED
                 Batch.batch_code.ilike(f"%{search}%"),
             )
         )

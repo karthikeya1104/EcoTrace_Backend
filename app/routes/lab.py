@@ -24,7 +24,7 @@ def pending_lab_tests(
         .options(joinedload(Batch.product))
         .filter(
             Batch.validation_status == ValidationStatus.lab_required,
-            ~Batch.lab_reports.any()  # ✅ No lab report exists
+            ~Batch.lab_reports.any()  #  No lab report exists
         )
     )
 

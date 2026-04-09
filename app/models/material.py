@@ -41,7 +41,7 @@ class Material(Base):
     risk_level = Column(Enum(RiskLevel))
     description = Column(String)
 
-    # ✅ REQUIRED RELATIONSHIP
+    #  REQUIRED RELATIONSHIP
     batch_materials = relationship(
         "BatchMaterial",
         back_populates="material"

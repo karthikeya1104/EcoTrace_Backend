@@ -27,7 +27,7 @@ def list_batch_reviews(
     db: Session = Depends(get_db),
     user = Depends(get_current_user_optional)
 ):
-    user_id = user.id if user else None  # ✅ FIX HERE
+    user_id = user.id if user else None  #  FIX HERE
 
     items, total = get_reviews_by_batch_paginated(
         db,

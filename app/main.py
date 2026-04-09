@@ -16,7 +16,7 @@ logger.info("FastAPI application starting...")
 app = FastAPI(title="EcoTrace")
 logger.info("FastAPI app initialized")
 
-# 🔓 CORS CONFIGURATION (ADD THIS)
+# CORS CONFIGURATION (ADD THIS)
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 origins = [
     "http://localhost:5173",      # Vite
@@ -36,7 +36,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# 🔓 END CORS CONFIGURATION
+# END CORS CONFIGURATION
 
 logger.info("CORS middleware added")
 

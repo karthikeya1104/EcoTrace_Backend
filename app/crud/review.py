@@ -66,7 +66,7 @@ def get_reviews_by_batch_paginated(
         .filter(Review.batch_id == batch_id)
     )
 
-    # ✅ Apply special ordering ONLY for first page
+    #  Apply special ordering ONLY for first page
     if user_id is not None and skip == 0:
         query = query.order_by(
             case(
@@ -109,7 +109,7 @@ def get_reviews_by_product_paginated(
             Review.rating,
             Review.comment,
             Review.created_at,
-            Review.batch_id,  # ✅ IMPORTANT
+            Review.batch_id,  #  IMPORTANT
             User.name.label("user_name")
         )
         .join(Batch, Batch.id == Review.batch_id)

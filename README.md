@@ -283,13 +283,13 @@ CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker
 
 ### Production Security
 
-- ✅ HTTPS/TLS enabled
-- ✅ Request logging and monitoring
-- ✅ Secrets via environment variables
-- ✅ CORS properly configured
-- ✅ Input validation on all endpoints
-- ✅ Comprehensive error handling
-- ✅ Audit logging enabled
+-  HTTPS/TLS enabled
+-  Request logging and monitoring
+-  Secrets via environment variables
+-  CORS properly configured
+-  Input validation on all endpoints
+-  Comprehensive error handling
+-  Audit logging enabled
 
 ---
 

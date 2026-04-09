@@ -82,7 +82,7 @@ def get_batch(db: Session, batch_id: int, manufacturer_id: int):
         .options(
             selectinload(Batch.product),
             selectinload(Batch.materials)
-                .selectinload(BatchMaterial.material)  # 🔥 REQUIRED
+                .selectinload(BatchMaterial.material)  #  REQUIRED
         )
         .join(Batch.product)
         .filter(
@@ -103,7 +103,7 @@ def create_batch(
     data,
 ):
     try:
-        with db.begin():  # 🔒 ACID transaction block
+        with db.begin():  #  ACID transaction block
 
             # -------- 1. Validate Product Ownership --------
             product = (
@@ -173,7 +173,7 @@ def create_batch(
                     current_materials
                 )
 
-                # ✅ NO CHANGE → reuse everything
+                #  NO CHANGE → reuse everything
                 if change_type == "no_change":
                     batch.validation_status = ValidationStatus.auto_verified
                     batch.status = BatchStatus.verified
@@ -208,7 +208,7 @@ def create_batch(
                             )
                         )
 
-                # ✅ MINOR CHANGE → AI review
+                #  MINOR CHANGE → AI review
                 elif change_type == "minor":
                     batch.validation_status = ValidationStatus.ai_review
                     ai_rating = generate_ai_rating(
@@ -218,7 +218,7 @@ def create_batch(
                     )
                     batch.status = BatchStatus.verified
 
-                # ✅ MAJOR CHANGE → Lab required
+                #  MAJOR CHANGE → Lab required
                 else:
                     batch.validation_status = ValidationStatus.lab_required
                     ai_rating = generate_ai_rating(
@@ -227,7 +227,7 @@ def create_batch(
                         current_materials
                     )
                 
-            # ✅ FIRST BATCH
+            #  FIRST BATCH
             else:
                 batch.validation_status = ValidationStatus.lab_required
                 ai_rating = generate_ai_rating(
@@ -256,7 +256,7 @@ def create_batch(
                         )
                     )
 
-        # 🔒 auto commit
+        #  auto commit
 
     except IntegrityError:
         db.rollback()

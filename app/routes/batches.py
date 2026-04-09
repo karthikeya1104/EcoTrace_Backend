@@ -11,6 +11,8 @@ from app.routes.auth import get_db
 from app.core.roles import require_role
 from app.models.user import UserRole
 import app.crud.batch as batch_crud
+from app.models.batch import Batch
+from app.models.material import BatchMaterial
 
 router = APIRouter()
 
@@ -43,6 +45,43 @@ def list_my_batches(
         items=items,
     )
 
+
+# ============================================================
+# GET LATEST MATERIALS BY PRODUCT
+# ============================================================
+@router.get("/product/{product_id}/latest-materials")
+def get_latest_materials(product_id: int, db: Session = Depends(get_db)):
+
+    #  Step 1: Get latest batch
+    latest_batch = (
+        db.query(Batch)
+        .filter(Batch.product_id == product_id)
+        .order_by(Batch.created_at.desc())
+        .first()
+    )
+
+    if not latest_batch:
+        raise HTTPException(status_code=404, detail="No batch found")
+
+    #  Step 2: Get materials using batch_id
+    batch_materials = (
+        db.query(BatchMaterial)
+        .filter(BatchMaterial.batch_id == latest_batch.id)
+        .all()
+    )
+
+    return {
+        "batch_id": latest_batch.id,
+        "materials": [
+            {
+                "id": bm.id,
+                "material_name": bm.material.name,
+                "percentage": bm.percentage,
+                "source": bm.source,
+            }
+            for bm in sorted(batch_materials, key=lambda x: x.percentage, reverse=True) 
+        ]
+    }
 
 # ============================================================
 # GET SINGLE

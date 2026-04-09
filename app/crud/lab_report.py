@@ -196,7 +196,7 @@ def verify_lab_report(db: Session, report_id: int):
 
     report.verified = True
 
-    # ✅ Update batch status
+    #  Update batch status
     report.batch.status = BatchStatus.verified
 
     db.commit()
